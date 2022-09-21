@@ -41,7 +41,7 @@
 
   "val_batches": 100,
   "val_every": 999999999,
-  "ckpt_every": 500,
+  "ckpt_every": 1000,
   "keep_every": 10000,
 
   "name": "twitch",
