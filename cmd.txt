@@ -1,0 +1,1 @@
+python3 create_finetune_tfrecords.py dataset dataset --output-dir out --n-repack-epochs 1 --verbose --encoder_path twitch_j6_tokenizer

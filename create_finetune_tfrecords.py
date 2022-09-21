@@ -10,6 +10,7 @@ import ftfy
 import tensorflow as tf
 from lm_dataformat import Reader
 from transformers import GPT2TokenizerFast
+from transformers import AutoTokenizer
 from tqdm import tqdm
 
 
@@ -68,6 +69,9 @@ def parse_args():
                            default=False, action="store_true",
                            help="Prints extra information, such as the text removed by --min-unique-tokens")
 
+    misc_args.add_argument("--encoder_path", type=str,
+                           help="Path to encoder files, or leave unspecified to use GPT2 tokenizer")
+
     args = parser.parse_args()
 
     # convert input_path to pathy
@@ -90,7 +94,7 @@ def get_files(input_path: Path) -> List[str]:
         ), f"Input file type must be one of: {supported_file_types}"
         files = [input_path]
     else:
-        raise FileNotFoundError(f"No such file or directory: {input_path=}")
+        raise FileNotFoundError(f"No such file or directory: {input_path}")
 
     return [str(f) for f in files]
 
@@ -296,6 +300,94 @@ def create_tfrecords(files, args):
     write_tfrecord(all_sequences_across_epochs, fp)
 
 
+
+
+def rindex(lst, value):
+    lst.reverse()
+    i = lst.index(value)
+    lst.reverse()
+    return len(lst) - i - 1
+
+def split_list_aligned(l, n, prefix):
+    res = []
+
+    off = 0
+    while True:
+        chunk = l[off:off+n]
+        res.append(prefix + chunk)
+
+        if (len(chunk)<n):
+            break
+
+        try:
+            off += rindex(chunk, 198) + 1
+        except ValueError:
+            break
+
+    return res
+
+def archive_to_tokens(f, encoder, sequence_length=2049):
+    chanId = f.split('/')[-1].split('-')
+    chanId = "<|"+chanId[0]+"|><|"+chanId[1]+"|>"
+
+    prefix = encoder.encode(chanId)
+    prefix.append(198)
+
+    reader = Reader(f)
+    for doc in reader.stream_data(threaded=False):
+        doc = encoder.encode(doc)
+
+        if not args.preserve_data_order:
+            r = random.randint(0, sequence_length)
+            doc = doc[r:]
+            try:
+                aligned_offset = doc.index(198) + 1
+            except ValueError:
+                continue
+            doc = doc[aligned_offset:]
+
+        if len(doc) > sequence_length:
+            yield split_list_aligned(doc, sequence_length - len(prefix), prefix)
+
+def read_files_to_tokenized(files, args, encoder):
+    all_chunks = []
+
+    if args.preserve_data_order:
+        files = sorted(files)
+    else:
+        random.shuffle(files)
+
+    for f in tqdm(files, mininterval=10, smoothing=0, desc="reading/tokenizing files"):
+        for chunks in archive_to_tokens(f, encoder):
+            all_chunks.extend(chunks)
+
+    if not args.preserve_data_order:
+        random.shuffle(all_chunks)
+
+    return all_chunks
+
+def create_tfrecords_prefixed(files, args):
+    GPT2TokenizerFast.max_model_input_sizes['gpt2'] = 1e20  # disables a misleading warning
+    
+    if args.encoder_path is None:
+        encoder = GPT2TokenizerFast.from_pretrained('gpt2')
+    else:
+        encoder = AutoTokenizer.from_pretrained(args.encoder_path) #Tokenizer.from_file(args.encoder_path)
+
+    random.seed(args.seed)
+
+    all_sequences_across_epochs = []
+
+    for ep_ix in range(0, args.n_repack_epochs):
+        print(ep_ix)
+        full_seqs = read_files_to_tokenized(files, args, encoder)
+        all_sequences_across_epochs.extend(full_seqs)
+
+    total_sequence_len = len(all_sequences_across_epochs)
+
+    fp = os.path.join(args.output_dir, f"{args.name}_{total_sequence_len}.tfrecords")
+    write_tfrecord(all_sequences_across_epochs, fp)
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -304,4 +396,4 @@ if __name__ == "__main__":
     files = get_files(args.input_path)
     print(f"Creating TFRecords from files: {files}")
 
-    results = create_tfrecords(files, args)
+    results = create_tfrecords_prefixed(files, args)
