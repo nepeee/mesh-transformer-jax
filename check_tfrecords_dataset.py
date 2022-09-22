@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("twitch_j6_tokenizer")
 
-raw_dataset = tf.data.TFRecordDataset("out/dataset_346635.tfrecords")
+raw_dataset = tf.data.TFRecordDataset("out/dataset_337953.tfrecords")
 features = {
     "text": tf.io.VarLenFeature(tf.int64)
 }

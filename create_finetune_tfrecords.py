@@ -13,6 +13,7 @@ from transformers import GPT2TokenizerFast
 from transformers import AutoTokenizer
 from tqdm import tqdm
 
+import numpy
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""
@@ -296,6 +297,8 @@ def create_tfrecords(files, args):
 
     total_sequence_len = len(all_sequences_across_epochs)
 
+    print(numpy.asarray(all_sequences_across_epochs).shape)
+
     fp = os.path.join(args.output_dir, f"{args.name}_{total_sequence_len}.tfrecords")
     write_tfrecord(all_sequences_across_epochs, fp)
 
@@ -314,10 +317,10 @@ def split_list_aligned(l, n, prefix):
     off = 0
     while True:
         chunk = l[off:off+n]
-        res.append(prefix + chunk)
-
         if (len(chunk)<n):
             break
+
+        res.append(prefix + chunk)
 
         try:
             off += rindex(chunk, 198) + 1
@@ -359,7 +362,8 @@ def read_files_to_tokenized(files, args, encoder):
 
     for f in tqdm(files, mininterval=10, smoothing=0, desc="reading/tokenizing files"):
         for chunks in archive_to_tokens(f, encoder):
-            all_chunks.extend(chunks)
+            if chunks:
+                all_chunks.extend(chunks)
 
     if not args.preserve_data_order:
         random.shuffle(all_chunks)
@@ -385,6 +389,8 @@ def create_tfrecords_prefixed(files, args):
 
     total_sequence_len = len(all_sequences_across_epochs)
 
+    print(numpy.asarray(all_sequences_across_epochs).shape)
+
     fp = os.path.join(args.output_dir, f"{args.name}_{total_sequence_len}.tfrecords")
     write_tfrecord(all_sequences_across_epochs, fp)
 
@@ -396,4 +402,5 @@ if __name__ == "__main__":
     files = get_files(args.input_path)
     print(f"Creating TFRecords from files: {files}")
 
+    #results = create_tfrecords(files, args)
     results = create_tfrecords_prefixed(files, args)

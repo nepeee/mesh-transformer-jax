@@ -25,21 +25,12 @@
   "model_dir": "checkpoints",
 
   "train_set": "twitch.train.index",
-  "val_set": {
-    "pile": "pile.val.index",
-    "owt": "openwebtext2_new_inputs.val.index"
-  },
+  "val_set": {},
 
   "eval_harness_tasks": [
-    "lambada",
-    "piqa",
-    "hellaswag",
-    "winogrande",
-    "mathqa",
-    "pubmedqa"
   ],
 
-  "val_batches": 100,
+  "val_batches": 0,
   "val_every": 999999999,
   "ckpt_every": 1000,
   "keep_every": 10000,

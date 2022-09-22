@@ -3,16 +3,23 @@ python3 create_finetune_tfrecords.py dataset dataset --output-dir out --n-repack
 
 gcloud config set project trcdev
 gcloud config set compute/zone europe-west4-a
-gcloud alpha compute tpus tpu-vm create tpu-6b --zone europe-west4-a --accelerator-type v3-8 --version tpu-vm-base
+gcloud alpha compute tpus tpu-vm create tpu-6b --zone europe-west4-a --accelerator-type v3-8 --version tpu-vm-tf-2.6.5
 gcloud alpha compute tpus tpu-vm ssh tpu-6b --zone europe-west4-a
 
 
-git pull https://github.com/nepeee/mesh-transformer-jax.git
+git clone https://github.com/nepeee/mesh-transformer-jax.git
 cd mesh-transformer-jax
+git checkout dev
 pip install -r requirements.txt
-pip install jax==0.2.12
+pip3 install urllib3==1.26.11
+pip3 install pandas==1.3.3
 
-python3 device_train.py --config=twitch.json --tune-model-path=gs://trcdevnow/step_383500/
+pip install jax==0.2.12 jaxlib==0.1.68
+pip3 install chex==0.1.2
+
+
+
+python3 device_train.py --config=configs/twitch.json --tune-model-path=gs://trcdevnow/step_383500/
 
 
 
