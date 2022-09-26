@@ -12,12 +12,12 @@
   "per_replica_batch": 1,
   "gradient_accumulation_steps": 32,
 
-  "warmup_steps": 3000,
-  "anneal_steps": 51160,
+  "warmup_steps": 500,
+  "anneal_steps": 99500,
   "lr": 5e-5,
   "end_lr": 1e-5,
   "weight_decay": 0.1,
-  "total_steps": 54160,
+  "total_steps": 100000,
 
   "tpu_size": 8,
 
