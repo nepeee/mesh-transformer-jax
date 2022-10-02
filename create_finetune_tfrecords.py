@@ -305,6 +305,43 @@ def create_tfrecords(files, args):
 
 
 
+def rand_userids(tokens):
+    global tokenizer
+
+    uidBase = 140
+    idMinTok = 50257
+    uidPrefs = [ 198, 50399, 31, 2488 ] #\n <|um|> @ @
+    
+    i = 2
+    uidMap = {}
+    while i < len(tokens)-2:
+        if tokens[i] in uidPrefs:
+            uid1 = tokens[i+1] - idMinTok
+            uid2 = tokens[i+2] - idMinTok
+
+            if (0 <= uid1 < uidBase) and (0 <= uid2 < uidBase):
+                uidNum = uid1 * uidBase + uid2
+                
+                if not uidNum in uidMap:
+                    while True:
+                        newUidNum = random.randint(0, uidBase*uidBase -1)
+                        if not newUidNum in uidMap:
+                            break
+
+                    uidMap[uidNum] = newUidNum
+                else:
+                    newUidNum = uidMap[uidNum]
+
+                uid1, uid2 = divmod(newUidNum, uidBase)
+                tokens[i+1] = uid1 + idMinTok
+                tokens[i+2] = uid2 + idMinTok
+                
+                i += 3
+                continue
+        i += 1
+
+    return tokens
+
 def rindex(lst, value):
     lst.reverse()
     i = lst.index(value)
@@ -320,7 +357,8 @@ def split_list_aligned(l, n, prefix):
         if (len(chunk)<n):
             break
 
-        res.append(prefix + chunk)
+        rchunk = rand_userids(prefix + chunk)
+        res.append(rchunk)
 
         try:
             off += rindex(chunk, 198) + 1
