@@ -1,0 +1,43 @@
+{
+  "layers": 28,
+  "d_model": 4096,
+  "n_heads": 16,
+  "n_vocab": 50400,
+  "norm": "layernorm",
+  "pe": "rotary",
+  "pe_rotary_dims": 64,
+
+  "seq": 2048,
+  "cores_per_replica": 8,
+  "per_replica_batch": 1,
+  "gradient_accumulation_steps": 32,
+
+  "warmup_steps": 3000,
+  "anneal_steps": 97000,
+  "lr": 3e-5,
+  "end_lr": 1e-5,
+  "weight_decay": 0.1,
+  "total_steps": 100000,
+
+  "tpu_size": 8,
+
+  "bucket": "trcdevnow",
+  "model_dir": "checkpoints2",
+
+  "train_set": "twitch.train.index",
+  "val_set": {
+    "val": "twitch.val.index"
+  },
+
+  "eval_harness_tasks": [
+  ],
+
+  "val_batches": 100,
+  "val_every": 1000,
+  "ckpt_every": 1000,
+  "keep_every": 10000,
+
+  "name": "twitch2",
+  "wandb_project": "6B",
+  "comment": ""
+}
