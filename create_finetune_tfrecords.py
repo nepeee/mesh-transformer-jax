@@ -306,7 +306,7 @@ def create_tfrecords(files, args):
 
 
 def rand_userids(tokens):
-    global tokenizer
+    # 50257 - 1 50384 - 0 50396 - 128 (last)
 
     uidBase = 140
     idMinTok = 50257
@@ -321,20 +321,23 @@ def rand_userids(tokens):
 
             if (0 <= uid1 < uidBase) and (0 <= uid2 < uidBase):
                 uidNum = uid1 * uidBase + uid2
-                
-                if not uidNum in uidMap:
-                    while True:
-                        newUidNum = random.randint(0, uidBase*uidBase -1)
-                        if not newUidNum in uidMap:
-                            break
 
-                    uidMap[uidNum] = newUidNum
+                if (uid1>14) and (uid1!=127):
+                    if uidNum not in uidMap:
+                        while True:
+                            newUidNum = random.randint(0, uidBase*uidBase -1)
+                            if newUidNum not in uidMap.values():
+                                break
+
+                        uidMap[uidNum] = newUidNum
+                    else:
+                        newUidNum = uidMap[uidNum]
+
+                    uid1, uid2 = divmod(newUidNum, uidBase)
+                    tokens[i+1] = uid1 + idMinTok
+                    tokens[i+2] = uid2 + idMinTok
                 else:
-                    newUidNum = uidMap[uidNum]
-
-                uid1, uid2 = divmod(newUidNum, uidBase)
-                tokens[i+1] = uid1 + idMinTok
-                tokens[i+2] = uid2 + idMinTok
+                    uidMap[uidNum] = uidNum
                 
                 i += 3
                 continue
