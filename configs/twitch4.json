@@ -22,7 +22,7 @@
   "tpu_size": 8,
 
   "bucket": "trcdevnow",
-  "model_dir": "checkpoints",
+  "model_dir": "checkpoints3",
 
   "train_set": "twitch2.train.index",
   "val_set": {
@@ -37,7 +37,7 @@
   "ckpt_every": 250,
   "keep_every": 10000,
 
-  "name": "twitch3",
+  "name": "twitch4",
   "wandb_project": "6B",
   "comment": ""
 }
